@@ -1,0 +1,35 @@
+# Chapter 1 - Overview
+
+```{r}
+# Set up libraries and functions
+library(tidyverse)
+library(rosdata)
+library(rstanarm)
+
+options(mc.cores = parallel::detectCores())
+```
+
+```{r}
+# Read in data
+data("hibbs")
+
+# Produce a scatterplot
+hibbs_plot <-
+hibbs |> 
+    ggplot(aes(x = growth, y = vote)) +
+    geom_point() +
+     xlab("Average recent growth in personal income") +
+     ylab("Incumbent party's vote share")
+
+# Estimate simple linear regression
+M1 <- stan_glm(vote ~ growth, data = hibbs)
+
+# Add regression line to graph
+hibbs_plot +
+    geom_abline(intercept = coef(M1)[1], slope = coef(M1)[2], col = "red", size = 1)
+
+# Print model
+print(M1)
+```
+
+
