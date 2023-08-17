@@ -1,0 +1,17 @@
+# Chapter 2 - Data and Measurement
+
+```{r}
+# Set up libraries and functions
+library(tidyverse)
+library(rosdata)
+library(rstanarm)
+
+options(mc.cores = parallel::detectCores())
+```
+
+```{r}
+data("health")
+plot(health$spending, health$lifespan, type = "n")
+text(health$spending, health$lifespan, health$country)
+```
+
