@@ -1,0 +1,96 @@
+# Chapter 3 - Basics in Mathematics and Probability
+
+```{r}
+# Set up libraries and functions
+library(tidyverse)
+library(rosdata)
+library(rstanarm)
+library(patchwork)
+options(mc.cores = parallel::detectCores())
+```
+
+# Exercsises
+
+## 1.)
+
+```{r}
+# Get data
+age_groups <- c("18-29", "30-44", "45-64", "60+")
+supports_taxes <- c(0.5, 0.6, 0.4, 0.3)
+numbers <- c(200, 250, 300, 250)
+
+# Create tibble
+q1_data <- tibble(age_groups, supports_taxes, numbers)
+
+# Get weights
+q1_data <- q1_data |> mutate(weights = numbers / sum(numbers))
+
+# Get weighted average
+sum(q1_data$weights * q1_data$supports_taxes)
+
+```
+
+## 2.)
+
+```{r}
+q2_data <- q1_data |> mutate(new_weights = c(0.202, 0.135, 0.395, 0.2))
+
+# Get weighted average
+sum(q2_data$new_weights * q2_data$supports_taxes)
+```
+
+## 3.)
+
+```{r}
+p1 <- ggplot(mapping = aes (x = rnorm(100000))) + geom_density()
+p2 <- ggplot(mapping = aes (x = rnorm(100000, 100, 10))) + geom_density()
+p3 <- ggplot(mapping = aes (x = rnorm(100000, 50, 5000))) + geom_density()
+p4 <- ggplot(mapping = aes (x = rnorm(100000,50,50))) + geom_density()
+
+p1 + p2 + p3 + p4
+```
+
+## 4.)
+
+```{r}
+ ggplot(mapping = aes (x = rpois(100000, lambda = 3.5))) + geom_bar()
+```
+
+## 5.)
+
+```{r}
+ ggplot(mapping = aes (x = rbinom(100000, size = 20, p = 0.3))) + geom_bar()
+```
+
+## 6.) 
+
+```{r}
+# Create some fake samples 
+fake_scores <- rnorm(10000, 35, 10)
+transformed_scores <- fake_scores*1.5 + 47.5
+
+
+# To give a mean of 100 and a sd of 15 -
+    
+    # Add 65 to the scores
+    # Multiply Scores by 1.5
+
+# so equation is y = 1.5x + 65
+
+# The range of possible values is 47.5 to 120
+
+# Plot data
+x = 0:50
+y = 1.5*x + 47.5
+
+plot(x, y)
+
+```
+
+## 7.)
+
+```{r}
+
+```
+
+
