@@ -66,18 +66,23 @@ p1 + p2 + p3 + p4
 
 ```{r}
 # Create some fake samples 
-fake_scores <- rnorm(10000, 35, 10)
-transformed_scores <- fake_scores*1.5 + 47.5
+fake_scores <- rnorm(1000000, 35, 10)
+transformed_scores <- 1.5*(fake_scores) + 47.5
 
+mean(fake_scores)
+mean(transformed_scores)
+
+sd(fake_scores)
+sd(transformed_scores)
 
 # To give a mean of 100 and a sd of 15 -
     
-    # Add 65 to the scores
+    # Add 47.5 to the scores
     # Multiply Scores by 1.5
 
-# so equation is y = 1.5x + 65
+# so equation is y = 1.5x + 47.5
 
-# The range of possible values is 47.5 to 120
+# The range of possible values is 47.5 to 122.5
 
 # Plot data
 x = 0:50
@@ -90,7 +95,22 @@ plot(x, y)
 ## 7.)
 
 ```{r}
+# The other transformation is:
 
+# -1.5x + 152.5
+
+# This is undesirable as the highest scores in the original scale are now the lowest on the new scale which is counterintuitive.
+
+# This reversal is not ideal for comparison.
 ```
 
+## 8.)
+
+```{r}
+# mean of average height:
+(69.1/2) + (63.7/2)
+
+# SD of average height:
+sqrt(2.1025 + 1.8225 + 1.1745)
+```
 
