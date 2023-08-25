@@ -1,0 +1,230 @@
+# Chapter 4 - Statistical Inference
+
+```{r}
+# Set up libraries and functions
+library(tidyverse)
+library(rosdata)
+library(rstanarm)
+library(patchwork)
+options(mc.cores = parallel::detectCores())
+```
+
+```{r}
+n = 1000
+y = 700
+
+estimate <- y / n
+se <- sqrt(estimate*(1-estimate)/n)
+int_95 <- estimate + qnorm(c(0.025, 0.975))*se
+```
+
+```{r}
+# SE of difference
+x <- rnorm(1000000, mean = 0, sd = 4)
+y <- rnorm(1000000, mean = 0, sd = 5)
+
+sd(x)
+sd(y)
+
+sd(x - y)
+
+sqrt(sd(x)^2 + sd(y)^2)
+```
+
+```{r}
+y <- c(35, 34, 38, 35, 37)
+n <- length(y)
+estimate <- mean(y)
+se <- sd(y) / sqrt(n)
+int_50 <- estimate + qt(c(0.25, 0.75), n-1)*se
+int_95 <- estimate + qt(c(0.025, 0.975), n-1)*se
+```
+
+```{r}
+y <- rep(c(0,1,2,3,4), c(600,300,50,30,20))
+n <- length(y)
+estimate <- mean(y)
+se <- sd(y) / sqrt(n)
+int_50 <- estimate + qt(c(0.25, 0.75), n-1)*se
+int_95 <- estimate + qt(c(0.025, 0.975), n-1)*se
+```
+
+```{r}
+int_95 <- estimate + qt(c(0.025, 0.975), n-1)*se
+int_95*1000000
+```
+
+# Exercises
+
+## 1.)
+
+```{r}
+incentive = 500
+no_incentive = 500
+incentive_response_rate = 0.5
+no_incentive_response_rate = 0.4
+
+# Average treatment effect
+ate = incentive_response_rate - no_incentive_response_rate
+
+# SE for incentive
+incentive_SE <- sqrt((incentive_response_rate*(1-incentive_response_rate) / incentive))
+
+# SE for no incentive
+no_incentive_SE <- sqrt((no_incentive_response_rate*(1-no_incentive_response_rate) / no_incentive))
+
+# SE of difference
+sqrt(incentive_SE^2 + no_incentive_SE^2)
+```
+
+The SE of the ATE of 10 percent is ~ 3.1%
+
+## 2.)
+
+Assuming that men and women are equal in the population:
+
+The standard error for each proportion is: $SE = \sqrt{((p(1-p)) / (n)})$
+
+The quantity we want is the difference between support for the candidate for men and women,
+
+and the formula for the difference is $SE = \sqrt{SE_{men}^2} + SE_{women}^2})$
+
+So for the SE to be less than 5, let's consider the value that will maximise the variance (0.5 for both).
+
+then 0.0025 >= 2*SE^2_men
+
+So we want the SE for each sex to be less than 0.03535534
+
+Now we can work out the sample size for this:
+
+0.03535534 = sqrt(0.25 / n)
+0.03535534^2 = 0.25 / n
+n = 0.25 / 0.03535534^2
+
+```{r}
+n = 0.25 / 0.03535534^2
+```
+
+assuming equal proportions in the population, we have n = 200 for men and n = 200 for women, so we want to sample at least 400 people.
+
+## 3.)
+
+*Shooter A*:
+n_A = 20
+prop_A = 0.3
+
+*Shooter B*:
+n_B = 20
+prop_B = 0.4
+
+```{r}
+# Approach 1 - simulation
+shots_A <- rbinom(100000, 20, 0.3)
+shots_B <- rbinom(100000, 20, 0.4)
+
+mean(shots_B > shots_A)
+```
+
+The probability that the better shooter makes more shots is about 70 percent.
+
+## 4.)
+
+Let's say that we want only a 5% chance of being wrong, or in other words, a 95% chance of being correct.
+
+Then we want the probability that shots_B > shots_A at least 95%.
+
+```{r}
+# Create function to compute probability that B shoots more than A based on simulation
+prob_b_greater_a <-
+    function(n) {
+        shots_A <- rbinom(100000, n, 0.3)
+        shots_B <- rbinom(100000, n, 0.4)
+        
+        mean(shots_B > shots_A)
+    }
+
+# Increase n from 20 until response reaches 0.95
+n_trials = 20
+while(prob_b_greater_a(n_trials) < 0.95) {
+    n_trials = n_trials + 1
+    print(n_trials)
+}
+
+paste("So we have to perform", n_trials + 1, "trials to properly distinguish the two shooters")
+```
+
+## 5.)
+
+```{r}
+data("iris")
+
+iris <-
+    iris |> 
+    arrange(Sepal.Length)
+
+sample_means <- c()
+
+for (i in 1:500) {
+sample_mean <-
+    iris |> 
+slice_sample(n = 20) |> 
+    pull(Sepal.Length) |> 
+    mean()
+sample_means[i] <- sample_mean
+}
+
+hist(sample_means)
+```
+
+## 6.)
+
+```{r}
+girls <-
+    c(
+        0.4777,
+        0.4875,
+        0.4859,
+        0.4754,
+        0.4874,
+        0.4864,
+        0.4813,
+        0.4787,
+        0.4895,
+        0.4797,
+        0.4876,
+        0.4859,
+        0.4857,
+        0.4907,
+        0.5010,
+        0.4903,
+        0.4860,
+        0.4911,
+        0.4871,
+        0.4725,
+        0.4822,
+        0.4870,
+        0.4823,
+        0.4973
+    )
+
+observed_SD <- sd(girls)
+
+# Compare this to what would be expected from the binomial distribution
+expected_SD <- sqrt(0.4857*(1-0.4857) / 3900)
+
+expected_SD - observed_SD
+
+# Here we see that the observed SD is slightly smaller than what would be expected.
+
+# Now lets compare our observed variance with what is expected under the chi squared distribution with 23 degrees of freedom
+observed_var <- var(girls)
+
+sampleMean <- mean(girls)
+theoreticalVar <- expected_SD^2
+Q <- 23 * observed_var / theoreticalVar
+pValue <- pchisq(Q, df=23, lower.tail = TRUE)
+    
+```
+
+So there is insufficient evidence to reject the randomness model under the standard hypothesis testing framework.
+
