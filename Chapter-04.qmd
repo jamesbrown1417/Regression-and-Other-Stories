@@ -228,3 +228,101 @@ pValue <- pchisq(Q, df=23, lower.tail = TRUE)
 
 So there is insufficient evidence to reject the randomness model under the standard hypothesis testing framework.
 
+## 7.)
+
+```{r}
+y = 0
+n = 50
+
+# Using formula for small number of Ys:
+p = (y+2) / (n+4)
+std_error = sqrt((p*(1-p))/(n+4))
+
+ci = c(p - 2*std_error, p + 2*std_error)
+ci[1] = 0
+print(ci)
+```
+
+## 8.)
+
+```{r}
+effect = 1.42
+ci_effect = c(1.02, 1.98)
+
+# By taking log of point estimate and the CI endpoints
+log(effect) - log(ci_effect)[1]
+log(ci_effect)[2] - log(effect)
+
+# We see that it is symmetrical on the log scale.
+
+log(effect)
+
+# For SE
+(log(effect) - log(ci_effect)[1]) / 2
+
+```
+
+## 9.)
+
+```{r}
+# So the proportion of students who know the answer can be expressed in the following:
+# p = theta + 0.25*(1 - theta)
+
+# Now, we have
+p = 0.6
+# and
+se_p = sqrt(0.6*0.4 / 100)
+
+# Thus theta is equal to
+theta = (p - 0.25) / 0.75
+
+# And since the confidence interval for p is:
+ci_p = c(p - 2*se_p, p + 2*se_p)
+
+# Then the CI for theta is
+theta_lower = (ci_p[1] - 0.25) / 0.75
+theta_upper = (ci_p[2] - 0.25) / 0.75
+
+c(theta_lower, theta_upper)
+```
+
+## 10.)
+
+```{r}
+# a.)
+
+# The simple random survey will give better estimates for the population, whilst the oversampling of latinos will give more accurate comparisons
+
+# b.)
+
+# Lets assume that the p for latinos is 0.4, whilst for non-latin0s it is 0.55,
+# Then p for the population is 0.15*0.4 + 0.85*0.55 = 0.5275
+
+# Simple random survey----------------------------------------------------------
+n_latino = 150
+n_other = 850
+
+se_latino = sqrt((0.4*0.6 / 150))
+se_non_latino = sqrt((0.55*0.45 /850))
+
+se_diff_1 = sqrt(se_latino^2 + se_non_latino^2)
+
+# Oversampling------------------------------------------------------------------
+n_latino = 300
+n_other = 700
+
+se_latino = sqrt((0.4*0.6 / 300))
+se_non_latino = sqrt((0.55*0.45 /700))
+
+se_diff_2 = sqrt(se_latino^2 + se_non_latino^2)
+
+# Here we see that oversampling has indeed reduced the SE of the estimate of the difference.
+
+# As for the population estimates, the oversampling will have an expected value of 
+oversampling_estimate <- 0.3* 0.4 + 0.7*0.55 
+oversampling_estimate
+
+# Which is biased downwards as our sample is not representative of the population.
+# We could of course, in practice, adjust for the oversampling to address this, retaining the benefits of more precise between group comparisons and still having an unbiased population estimate.
+```
+

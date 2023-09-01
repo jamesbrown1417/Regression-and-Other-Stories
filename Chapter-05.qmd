@@ -1,0 +1,369 @@
+# Chapter 5 - Simulation
+
+```{r}
+# Set up libraries and functions
+library(tidyverse)
+library(rosdata)
+library(rstanarm)
+library(patchwork)
+options(mc.cores = parallel::detectCores())
+```
+
+```{r}
+n_girls <- rbinom(1, 400, 0.488)
+print(n_girls)
+```
+
+```{r}
+n_sims <- 1000
+n_girls <- rep(NA, n_sims)
+for (s in 1:n_sims) {
+    n_girls[s] <- rbinom(1, 400, 0.488)
+}
+
+hist(n_girls)
+```
+
+
+```{r}
+hist(rbinom(1000, 400, 0.488))
+```
+
+```{r}
+birth_type <-
+    sample(
+        c("fraternal twin", "identical twin", "single birth"),
+        size = 400,
+        replace = TRUE,
+        prob = c(1 / 125, 1 / 300, 1 - 1 / 125 - 1 / 300))
+
+girls <- rep(NA, 400)
+for (i in 1:400) {
+    if (birth_type[i] == "single birth") {
+        girls[i] <- rbinom(1, 1, 0.488)
+    } else if (birth_type[i] == "identical twin") {
+        girls[i] <- 2*rbinom(1, 1, 0.495)
+    } else if (birth_type[i] == "fraternal twin") {
+        girls[i] <- rbinom(1, 2, 0.495)
+    } 
+}
+
+n_girls <- sum(girls)
+```
+
+```{r}
+girls <- ifelse(
+    birth_type == "single birth",
+    rbinom(400, 1, 0.488),
+    ifelse(
+        birth_type == "identical twin",
+        2 * rbinom(400, 1, 0.495),
+        rbinom(400, 2, 0.495)
+    )
+)
+
+```
+
+
+```{r}
+n_sims <- 1000
+n_girls <- rep(NA, n_sims)
+
+for (s in 1:n_sims) {
+    birth_type <-
+        sample(
+            c("fraternal twin", "identical twin", "single birth"),
+            size = 400,
+            replace = TRUE,
+            prob = c(1 / 125, 1 / 300, 1 - 1 / 125 - 1 / 300)
+        )
+    
+    girls <- rep(NA, 400)
+    for (i in 1:400) {
+        if (birth_type[i] == "single birth") {
+            girls[i] <- rbinom(1, 1, 0.488)
+        } else if (birth_type[i] == "identical twin") {
+            girls[i] <- 2 * rbinom(1, 1, 0.495)
+        } else if (birth_type[i] == "fraternal twin") {
+            girls[i] <- rbinom(1, 2, 0.495)
+        }
+    }
+    n_girls[s] <- sum(girls)
+}
+
+hist(n_girls)
+```
+
+```{r}
+n_sims <- 1000
+y1 <- rnorm(n_sims, 3, 0.5)
+y2 <- exp(y1)
+y3 <- rbinom(n_sims, 20, 0.6)
+y4 <-rpois(n_sims, 5)
+
+par(mfrow = c(2, 2))
+hist(y1, breaks = seq(floor(min(y1)), max(y1) + 0.2, 0.2),
+     main = "1000 draws from a normal dist. with mean 3, sd 0.5")
+hist(y2, breaks = seq(0, max(y2) + 5, 5),
+     main = "1000 draws from the corresponding lognormal dist.")
+hist(y3, breaks = seq(-0.5, 20.5, 1),
+     main = "1000 draws from the binomial dist. with 20 tries, probability 0.6")
+hist(y4, breaks = seq(-0.5, max(y4) + 1, 1),
+     main = "1000 draws from the Poisson dist. with mean 5")
+```
+
+```{r}
+N <- 10
+male <- rbinom(N, 1, 0.48)
+height <- ifelse(male==1, rnorm(N, 69.1*2.54, 2.9*2.54), rnorm(N, 63.7*2.54, 2.7*2.54))
+avg_height <- mean(height)
+print(avg_height)
+```
+
+```{r}
+n_sims <- 1000
+avg_height <- rep(NA, n_sims)
+max_height <- rep(NA, n_sims)
+
+for (s in 1:n_sims) {
+    N <- 10
+    male <- rbinom(N, 1, 0.48)
+    height <- ifelse(male==1, rnorm(N, 69.1*2.54, 2.9*2.54), rnorm(N, 63.7*2.54, 2.7*2.54))
+    avg_height[s] <- mean(height)
+    max_height[s] <- max(height)
+
+}
+
+hist(avg_height, main="Dist of avg height of 10 adults")
+hist(max_height, main="Dist of max height of 10 adults")
+```
+
+```{r}
+height_sim <- function(N){
+    male <- rbinom(N, 1, 0.48)
+    height <- ifelse(male==1, rnorm(N, 69.1*2.54, 2.9*2.54), rnorm(N, 63.7*2.54, 2.7*2.54))
+    mean(height)
+}
+
+avg_height <- replicate(1000, height_sim(N=10))
+hist(avg_height)
+```
+
+```{r}
+z <- rnorm(1e4, 5, 2)
+cat("mean =", mean(z), ", median =", median(z), ", sd =", sd(z), ", mad sd =", mad(z))
+```
+
+```{r}
+# Sampling distribution of mean of z
+(sd_z <- 2 / sqrt(10000))
+```
+
+```{r}
+quantile(z, c(0.25, 0.75))
+quantile(z, c(0.025, 0.975))
+```
+
+```{r}
+earn <- earnings$earn
+male <- earnings$male
+(ratio <- median(earn[male == 0]) / median(earn[male == 1]))
+```
+
+```{r}
+boot_ratio <- function(data) {
+    n <- nrow(data)
+    boot <- sample(n, replace = TRUE)
+    earn_boot <- data$earn[boot]
+    male_boot <- data$male[boot]
+    median(earn_boot[male_boot == 0]) / median(earn_boot[male_boot == 1])
+}
+
+n_sims <- 1000
+output <- replicate(n_sims, boot_ratio(data = earnings))
+
+hist(output)
+cat(", median =", median(output), ", sd =", sd(output))
+```
+
+# Exercises
+
+## 1.)
+
+```{r}
+misses_two <- function() {
+    shots_taken <- 0
+    shots_made <- 0
+    shots_missed_in_a_row <- 0
+    while (TRUE) {
+        shot_result <- rbinom(1, 1, 0.6)
+        shots_taken = shots_taken + 1
+        if (shot_result == 1) {
+            shots_missed_in_a_row = 0
+            shots_made = shots_made + 1
+        }
+        else {
+            shots_missed_in_a_row = shots_missed_in_a_row + 1
+        }
+        
+        if (shots_missed_in_a_row == 2) {
+            break
+        }
+    }
+    tibble("shots_made" = c(shots_made), "shots_taken" = c(shots_taken))
+}
+
+results <- map(1:10000, ~ misses_two()) |> bind_rows()
+cat("mean:", mean(results$shots_taken), " sd:", sd(results$shots_taken))
+
+hist(results$shots_taken)
+
+results |> mutate(success_prop = shots_made / shots_taken) |>
+    ggplot(aes(x = shots_taken, success_prop)) +
+    geom_point()
+```
+
+## 2.)
+
+```{r}
+elevator <- function() {
+    men <- rbinom(1, 10, 0.5)
+    women <- 10 - men
+    men_weights <- rnorm(men, 5.13, 0.17)
+    women_weights <- rnorm(women, 5.13, 0.17)
+    sum(exp(men_weights)) + sum(exp(women_weights))
+}
+
+results <- replicate(100000, elevator())
+mean(results > 1750)
+
+# About a 34 percent chance of exceeding the weight limit
+```
+
+## 3.)
+
+```{r}
+# a.)
+prob_3_out_of_10 <- dbinom(x = 3, size = 10, prob = 0.4)
+
+# b.)
+ten_shots <- function() {
+    rbinom(1, 10, 0.4)
+}
+
+results <- replicate(10000, ten_shots())
+mean(results == 3)
+
+prob_3_out_of_10 - mean(results == 3)
+
+# This confirms that they are the same (very slight difference due to finite sampling error).
+```
+
+## 4.)
+
+```{r}
+clt_sim <- function(n) {
+    sum(runif(n))
+}
+
+results <- replicate(1000, clt_sim(20))
+x <- seq(min(results), max(results), length=100)
+norm_density <- dnorm(x, mean=mean(results), sd=sd(results))
+
+# Overlay the density curve
+hist(results, probability = TRUE)
+lines(x, norm_density, col="blue", lwd=2)
+
+# The normal approximation from CLT looks to be very good
+```
+
+## 5.)
+
+```{r}
+height_sim <- function() {
+    x <- rnorm(100, 69.1, 2.9)
+    y <- rnorm(100, 63.7, 2.7)
+    
+    mean(x) - mean(y)
+}
+
+result <- replicate(1000, height_sim())
+hist(result)
+
+mean(result)
+sd(result)
+
+# Theoretical results
+
+# mean(x-y)
+69.1 - 63.7
+
+# SD(x-y)
+sqrt((2.9/sqrt(100))^2 + (2.7/sqrt(100))^2)
+
+# Here we see that the theoretical and observed mean and SD for x - y are the same (Except for slight simulation error)
+```
+
+## 6.) 
+
+```{r}
+widget_sim <- function() {
+savings <- rnorm(1, 5, 4)
+units_sold <- rnorm(1, 40000, 10000)
+units_sold * savings
+}
+
+results <- replicate(10000, widget_sim())
+hist(results)
+```
+
+## 8.)
+
+```{r}
+
+point_estimate <- rnorm(1000, 0.1, 0.17) 
+ci_lower <- point_estimate - 1.96*0.17
+ci_upper <- point_estimate + 1.96*0.17
+
+mean(ci_lower < 0.1 & ci_upper > 0.1)
+
+# 95% of the intervals contain the true parameter value
+
+mean(point_estimate)
+sd(point_estimate)
+```
+
+## 9.)
+
+```{r}
+point_estimate_significant <- point_estimate[exp(ci_lower) > 1 | exp(ci_upper) < 1]
+ci_lower_significant <- ci_lower[exp(ci_lower) > 1 | exp(ci_upper) < 1]
+ci_upper_significant <- ci_upper[exp(ci_lower) > 1 | exp(ci_upper) < 1]
+
+mean(ci_lower_significant < 0.1 & ci_upper_significant > 0.1)
+
+mean(point_estimate_significant)
+sd(point_estimate_significant)
+
+# The mean of the point estimates is higher and the SD is lower
+# Also, the coverage of the 95% confidence intervals is only 70% now!
+```
+
+## 10.)
+
+```{r}
+# a.)
+cost_difference <- rnorm(1000, 600, 400)
+effectiveness_difference  <- rnorm(1000, 3, 2)
+
+plot(effectiveness_difference, cost_difference)
+
+# b.)
+incremental_cost_ratio <- cost_difference / effectiveness_difference
+
+quantile(incremental_cost_ratio, c(0.25, 0.75))
+quantile(incremental_cost_ratio, c(0.025, 0.975))
+
+# c.)
+# increasing the SD to 2 made the confidence intervals wider
+```

@@ -1,0 +1,70 @@
+# Chapter 5 - Background on Regression Modeling
+
+```{r}
+# Set up libraries and functions
+library(tidyverse)
+library(rosdata)
+library(rstanarm)
+library(patchwork)
+options(mc.cores = parallel::detectCores())
+```
+
+```{r}
+x <- 1:20
+n <- length(x)
+a <- 0.2
+b <- 0.3
+sigma <- 0.5
+y <- a + b*x + sigma*rnorm(n)
+
+plot(x, y)
+```
+
+```{r}
+fake <- tibble(x, y)
+
+fit1 <- stan_glm(y ~ x, data = fake)
+
+print(fit1, digits=2)
+
+```
+
+```{r}
+plot(fake$x, fake$y, main="Data and fitted regression line")
+a_hat <- coef(fit1)[1]
+b_hat <- coef(fit1)[2]
+abline(a_hat, b_hat)
+x_bar <- mean(fake$x)
+text(x_bar, a_hat + b_hat*x_bar,
+paste("y =", round(a_hat, 2), "+", round(b_hat, 2), "* x"), adj=0)
+```
+
+```{r}
+earnings$earnk <- earnings$earn/1000
+fit_2 <- stan_glm(earnk ~ height + male, data=earnings)
+print(fit_2)
+```
+
+```{r}
+R2 <- 1 - sigma(fit_2)^2 / sd(earnings$earnk)^2
+R2
+```
+
+```{r}
+print(heights[1:5,])
+
+fit_1 <- stan_glm(daughter_height ~ mother_height, data=heights)
+print(fit_1)
+```
+
+```{r}
+n <- nrow(heights)
+mother_height_jitt <- heights$mother_height + runif(n, -0.5, 0.5)
+daughter_height_jitt <- heights$daughter_height + runif(n, -0.5, 0.5)
+plot(mother_height_jitt, daughter_height_jitt, xlab="Mother's height (inches)",
+ylab="Adult daughter's height (inches)")
+a_hat <- coef(fit_1)[1]
+b_hat <- coef(fit_1)[2]
+abline(a_hat, b_hat)
+```
+
