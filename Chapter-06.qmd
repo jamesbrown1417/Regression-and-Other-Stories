@@ -68,3 +68,123 @@ b_hat <- coef(fit_1)[2]
 abline(a_hat, b_hat)
 ```
 
+```{r}
+n <- 1000
+true_ability <- rnorm(n, 50, 10)
+noise_1 <- rnorm(n, 0, 10)
+noise_2 <- rnorm(n, 0, 10)
+midterm <- true_ability + noise_1
+final <- true_ability + noise_2
+exams <- tibble(midterm, final)
+```
+
+```{r}
+fit_1 <- stan_glm(final ~ midterm, data=exams)
+plot(midterm, final, xlab="Midterm exam score", ylab="Final exam score")
+abline(coef(fit_1))
+```
+
+# Exercises
+
+## 2.)
+
+```{r}
+# Function
+sim_data_points <- function(n = 1000, sigma = 10, a, b) {
+    x <- runif(n, min = 0, max = 100)
+    errors <- rnorm(n, mean = 0, sd = sigma)
+    y = a + b*x + errors
+    
+    dat = tibble(y, x)
+    
+    # Fit model
+    mod <- stan_glm(y ~ x, data = dat)
+    
+    # Scatterplot
+    plot(x, y, xlab="X", ylab="Y")
+    abline(coef(mod))
+}
+
+sim_data_points(100, sigma = 10, a = 200, b = 1)
+```
+
+## 3.)
+
+```{r}
+# Function
+sim_data_points <- function(n = 1000, sigma = 10, a, b) {
+    x <- runif(n, min = 0, max = 100)
+    errors <- rnorm(n, mean = 0, sd = sigma)
+    y = a + b*x + errors
+    
+    dat = tibble(y, x)
+    
+    # Fit model
+    mod <- stan_glm(y ~ x, data = dat)
+    
+    # Return model
+    se(mod)
+}
+
+sim_data_points(100, sigma = 100, a = 10, b = 5) -> a
+```
+
+## 4.)
+
+```{r}
+seq <- c(10, 20, 100, 500, 1000, 10000)
+    
+# Function
+sim_data_points <- function(n, sigma = 10, a = 10, b = 5) {
+    x <- runif(n, min = 0, max = 100)
+    errors <- rnorm(n, mean = 0, sd = sigma)
+    y = a + b*x + errors
+    
+    dat = tibble(y, x)
+    
+    # Fit model
+    mod <- stan_glm(y ~ x, data = dat)
+    
+    # Return results
+    tibble(sims = n, se_for_slope = se(mod)[2])
+}
+
+# Map over sequence
+results <- map(seq, sim_data_points)
+
+results <- bind_rows(results)
+
+results |> 
+    ggplot(aes(x = sims, y = se_for_slope)) +
+    geom_point()
+```
+
+## 5.)
+
+```{r}
+earnings |> 
+    group_by(male) |> 
+    summarise(avg_height_male = mean(height))
+```
+
+```{r}
+mod <- stan_glm(earn ~ height + male, data=earnings)
+print(mod)
+```
+
+Average earnings for men: -25915.8 + 649.2*70.08889 + 10618.9 = 30,204.81
+Average earnings for women: -25915.8 + 649.2*64.48642 = 15,948.78
+
+Average earnings for population: 0.52 * 15948.78 + 0.48 * 30204.81 = 22,791.67
+
+```{r}
+earnings |> 
+    group_by(male) |> 
+    summarise(avg_earnings = mean(earn))
+```
+
+```{r}
+earnings |> 
+    summarise(avg_earnings = mean(earn))
+```
+The estimates are slightly different, but very close to each other.
